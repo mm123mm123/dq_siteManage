@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>三月管理系统</title>
+    <link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" href="node_modules/layui-src/src/css/layui.css">
+    <link rel="stylesheet" href="/global.css">
+</head>
+<body>
+<div class="page-container">
+    <div class="layui-tab" lay-filter="tab" lay-allowClose="true">
+        <ul class="layui-tab-title">
+            <li lay-id="1">监测站点管理</li>
+        </ul>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <form class="layui-form layui-form-pane" action="" id="searchForm" lay-filter="searchForm">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">设备序列号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" class="layui-input" id="test1" placeholder="请输入">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">站点名称</label>
+                            <div class="layui-input-inline">
+                                <input type="text" class="layui-input" id="test2" placeholder="请输入">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">站点类型</label>
+                            <div class="layui-input-inline">
+                                <div id="siteType" name="siteType" class="xm-select-demo"></div>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">所在地</label>
+                            <div class="layui-input-inline">
+                                <div id="location" name="location" class="xm-select-demo"></div>
+                            </div>
+                        </div>
+                        <div class="layui-inline" id="selectPrepend">
+                            <button class="layui-btn" type="button" id="searchBtn">搜索</button>
+                            <button type="button" class="layui-btn refresh" onclick="top.annoTableIndex.reload()">
+                                刷新
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div class="button-container">
+                    <button type="button" class="layui-btn add">添加</button>
+                </div>
+                <table id="siteTable" lay-filter="table"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="node_modules/layui-src/src/layui.js"></script>
+<script src="node_modules/layui-src/src/lay/modules/jquery.js"></script>
+<script src="dist/xm-select.js"></script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="detail">查看</a>
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script>
+    console.log('hi');
+    top.apiPath = "http://localhost/api";
+    layui.use(['table', 'element', 'layedit', 'layer'], function () {
+        let table = layui.table;
+        let $ = layui.$;
+        let element = layui.element
+        let layedit = layui.layedit;
+        let layer = layui.layer
+        layedit.build('richText'); //建立编辑器
+        top.parentTabDel = function (id) {
+            element.tabDelete('tab', id)
+        }
+        top.parentTabChange = function (id) {
+            element.tabChange('tab', id)
+        }
+        siteType = xmSelect.render({
+            el: '#siteType',
+            prop: {
+                name: 'name',
+                value: 'id'
+            },
+            toolbar: { // 工具条配置
+                show: true, // 是否显示
+                showIcon: false, // 显示图标
+            },
+            data: [{id: 0, name: "点位"}, {id: 1, name: "微站"}, {id: 2, name: "街镇"}, {id: 3, name: "市控"}, {
+                id: 4,
+                name: "区级"
+            }, {id: 5, name: "国有"}]
+        });
+        siteLocation = xmSelect.render({
+            el: '#location',
+            prop: {
+                name: 'name',
+                value: 'id',
+            },
+            toolbar: { // 工具条配置
+                show: true, // 是否显示
+                showIcon: false, // 显示图标
+            },
+            data: [{id: 0, name: "旧宫镇"}, {id: 1, name: "榆垡镇"}, {id: 2, name: "有德家苑"}, {id: 3, name: "长子营镇"}],
+        })
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json;charset=utf-8",
+            url: top.apiPath + "/auth/webLogin",
+            data: JSON.stringify({username: 'admin', password: 123456}),
+            success: function (result) {
+                if (result.code === 0 && result.data && result.data.token) {
+                    let token = result.data.token;
+                    localStorage.setItem("token", token);
+                    top.annoTableIndex = table.render({
+                        elem: '#siteTable'
+                        // , url: '/api/content/impSiteMonitor/query_page?page=1&size=10'
+                        // , headers: {"access_token": localStorage.getItem('token')}
+                        , even: true
+                        , page: true
+                        , cols: [[ //表头
+                            {field: 'id', title: 'ID', fixed: 'left', width: "4%"}
+                            , {field: 'sqeno', title: '设备序列号', width: "8%"}
+                            , {field: 'type', title: '站点类型', width: "6%"}
+                            , {field: 'siteName', title: '站点名称', width: "6%"}
+                            , {field: 'stationSourceName', title: '站点来源', width: "10%"}
+                            , {field: 'location', title: '所在地'}
+                            , {field: 'createTime', title: '创建时间'}
+                            , {field: 'updateTime', title: '更新时间'}
+                            , {title: '操作', toolbar: '#barDemo',}
+                        ]]
+                        , data: [{
+                            "address": "string",
+                            "areaId": 0,
+                            "siteName": "旧宫镇",
+                            "location": "北京市大兴区旧宫镇",
+                            "createTime": "2021-03-24T08:44:17.280Z",
+                            "creator": "string",
+                            "id": 0,
+                            "frequency": "日",
+                            "latitudeLongitude": "string",
+                            "name": "string",
+                            "remark": "string",
+                            "sqeno": "DQ22345678",
+                            "stationDataSource": 0,
+                            "stationSourceName": '雪迪龙',
+                            "stationSource": {
+                                "contactAddress": "string",
+                                "contactNumber": "string",
+                                "contacts": "string",
+                                "createTime": "2021-03-24T08:44:17.280Z",
+                                "creator": "string",
+                                "id": 0,
+                                "name": "string",
+                                "remark": "string",
+                                "updateTime": "2021-03-24T08:44:17.280Z",
+                                "updater": "string"
+                            },
+                            "stationSourceId": 0,
+                            "type": "市控",
+                            "stationTypeId": 0,
+                            "updateTime": "2021-03-24T08:44:17.280Z",
+                            "updater": "string"
+                        }, {
+                            "address": "string",
+                            "areaId": 0,
+                            "siteName": "有德家苑",
+                            "location": "北京市大兴区有德家苑",
+                            "createTime": "2021-03-24T08:44:17.280Z",
+                            "creator": "string",
+                            "id": 0,
+                            "frequency": "月",
+                            "latitudeLongitude": "string",
+                            "name": "string",
+                            "remark": "string",
+                            "sqeno": "DQ12345678",
+                            "stationDataSource": 0,
+                            "stationSourceName": '北京空气质量APP',
+                            "stationSource": {
+                                "contactAddress": "string",
+                                "contactNumber": "string",
+                                "contacts": "string",
+                                "createTime": "2021-03-24T08:44:17.280Z",
+                                "creator": "string",
+                                "id": 0,
+                                "name": "string",
+                                "remark": "string",
+                                "updateTime": "2021-03-24T08:44:17.280Z",
+                                "updater": "string"
+                            },
+                            "stationSourceId": 0,
+                            "type": "区级",
+                            "stationTypeId": 0,
+                            "updateTime": "2021-03-24T08:44:17.280Z",
+                            "updater": "string"
+                        }]
+                        // , parseData: function (res) {
+                        //     res.data.records.forEach((record) => {
+                        //         record.createTime = new Date(record.createTime);
+                        //     })
+                        //     let tableData = {}
+                        //     tableData.code = 0
+                        //     tableData.msg = ''
+                        //     tableData.count = 1000
+                        //     tableData.data = res.data.records
+                        //     return tableData
+                        // },
+                        // request: {
+                        //     pageName: 'page',
+                        //     limitName: 'size'
+                        // }
+                    });
+                } else {
+                    layer.msg('登陆失败，' + result.message, {icon: 5});
+                }
+            }
+        });
+
+        $('.add').click(function () {
+            element.tabAdd('tab', {
+                title: '添加站点',
+                content: '                <iframe src="/addSite.html"\n' +
+                    '                        frameborder="0" scrolling="yes"\n' +
+                    '                        class="x-iframe"></iframe>',
+                id: '2'
+            })
+            element.tabChange('tab', '2');
+        })
+
+        table.on('tool(table)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            let data = obj.data; //获得当前行数据
+            let layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            let tr = obj.tr; //获得当前行 tr 的 DOM 对象（如果有的话）
+            if (layEvent === 'detail') {
+                element.tabAdd('tab', {
+                    title: '查看企业公告信息',
+                    content: '                <iframe src="/checkSite.html"\n' +
+                        '                        frameborder="0" scrolling="yes"\n' +
+                        '                        class="x-iframe"></iframe>',
+                    id: '3'
+                })
+                element.tabChange('tab', '3');
+            } else if (layEvent === 'edit') {
+                element.tabAdd('tab', {
+                    title: '编辑企业公告信息',
+                    content: '                <iframe src="/editSite.html"\n' +
+                        '                        frameborder="0" scrolling="yes"\n' +
+                        '                        class="x-iframe"></iframe>',
+                    id: '4'
+                })
+                element.tabChange('tab', '4');
+            } else if (layEvent === 'del') {
+                let confirmBox = layer.confirm('是否删除此记录？', {
+                    btn: ['删除', '取消']
+                }, function (index) {
+                    $.ajax({
+                        type: "POST",
+                        dataType: "json",
+                        contentType: "application/json;charset=utf-8",
+                        headers: {"access_token": localStorage.getItem('token')},
+                        url: top.apiPath + "/user/impCompanyNotice/delete/" + data.id,
+                        data: JSON.stringify({id: data.id}),
+                        success: function (result) {
+                            top.annoTableIndex.reload()
+                            layer.close(index)
+                        }
+                    });
+                }, function (index) {
+                    layer.close(index)
+                });
+
+            }
+        });
+    });
+</script>
+</body>
+</html>

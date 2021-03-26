@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./checkSite.css">
+    <link rel="stylesheet" href="node_modules/layui-src/src/css/layui.css">
+</head>
+<body>
+<div id="checkSiteTable">
+    <div class="layui-col-md4 left">
+    </div>
+    <div class="layui-col-md4 right">
+    </div>
+</div>
+<script src="node_modules/layui-src/src/layui.js"></script>
+<script src="node_modules/layui-src/src/lay/modules/jquery.js"></script>
+<script>
+    let $ = layui.$;
+    let paramList = window.location.search.substring(1).split('=')
+    let annoId = paramList[paramList.indexOf('id') + 1]
+    let siteParamArray = ['站点名称', '站点类型', '详细地址', '设备序列号', '所在地']
+    let recordData = ['站点来源', '创建时间', '更新时间',  '备注','设备经纬度', '创建人', '更新人']
+    let leftSiteTableItemArray = ""
+    let rightSiteTableItemArray = ""
+
+    function createRowAndInsertTableArray(headerArray, rowHTMLString) {
+        if (headerArray.length % 2 === 0) {
+            let leftSideArray = headerArray.slice(0, headerArray.length / 2);
+            leftSideArray.forEach((header) => {
+                leftSiteTableItemArray += "<div class=\"layui-row\">\n" + header + "</div>"
+            })
+            let rightSideArray = headerArray.slice(headerArray.length / 2);
+            rightSideArray.forEach((header) => {
+                rightSiteTableItemArray += "<div class=\"layui-row\">\n" + header + "</div>"
+            })
+        } else {
+            let leftSideArray = headerArray.slice(0, headerArray.length / 2 + 1);
+            leftSideArray.forEach((header) => {
+                leftSiteTableItemArray += "<div class=\"layui-row\">\n" + header + "</div>"
+            })
+            let rightSideArray = headerArray.slice(headerArray.length / 2 + 1);
+            rightSideArray.forEach((header) => {
+                rightSiteTableItemArray += "<div class=\"layui-row\">\n" + header + "</div>"
+            })
+            rightSiteTableItemArray += "<div class=\"layui-row blank-line\"></div>"
+        }
+    }
+
+    createRowAndInsertTableArray(siteParamArray)
+    createRowAndInsertTableArray(recordData)
+    $('.left').append(leftSiteTableItemArray)
+    $('.right').append(rightSiteTableItemArray)
+</script>
+</body>
+</html>
